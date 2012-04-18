@@ -18,17 +18,21 @@ import java.io.*;
 
 
 public class BlockDude extends JFrame {
-  private TrackerPanel trackPanel; 
+  private TrackerPanel trackPanel;
+  private GameRunner game;
   
   public BlockDude()
   {
     super("BlockDude");
 
     Container c = getContentPane();
-    c.setLayout( new BorderLayout() );   
+    c.setLayout( new BoxLayout(c, BoxLayout.LINE_AXIS) );   
 
-    trackPanel = new TrackerPanel();
-    c.add( trackPanel, BorderLayout.CENTER);
+	game = new GameRunner(); // WYLIE
+	c.add(game);
+
+    trackPanel = new TrackerPanel(game);
+    c.add(trackPanel);
 
     addWindowListener( new WindowAdapter() {
       public void windowClosing(WindowEvent e)

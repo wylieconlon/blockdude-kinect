@@ -46,16 +46,12 @@ import java.nio.ShortBuffer;
 
 public class Skeletons
 {
-  private static final String HEAD_FNM = "gorilla.png";
-
   // used to colour a user's limbs so they're different from the user's body color 
   private Color USER_COLORS[] = {
     Color.RED, Color.BLUE, Color.CYAN, Color.GREEN,
     Color.MAGENTA, Color.PINK, Color.YELLOW, Color.WHITE};
        // same user colors as in TrackersPanel
 
-
-  private BufferedImage headImage;    // image that's drawn over the head joint
 
   // OpenNI
   private UserGenerator userGen;
@@ -86,7 +82,6 @@ public class Skeletons
     this.userGen = userGen;
     this.depthGen = depthGen;
 
-    headImage = loadImage(HEAD_FNM);
     configure();
     userSkels = new HashMap<Integer, HashMap<SkeletonJoint, SkeletonJointPosition>>();
 
@@ -240,7 +235,7 @@ public class Skeletons
 
 
   public void draw(Graphics2D g2d)
-  // draw skeleton of each user, with a head image, and user status
+  // draw skeleton of each user, and user status
   {
     g2d.setStroke(new BasicStroke(8));
 
@@ -275,16 +270,14 @@ public class Skeletons
   }  // end of setLimbColor()
 
 
-
   private void drawSkeleton(Graphics2D g2d, 
                     HashMap<SkeletonJoint, SkeletonJointPosition> skel) 
   // draw skeleton as lines (limbs) between its joints;
   // hardwired to avoid non-implemented joints
+  //
+  // WYLIE: Removed torso from drawing, looks like a stick figure now
   {
-    drawLine(g2d, skel, SkeletonJoint.HEAD, SkeletonJoint.NECK);
-
-    drawLine(g2d, skel, SkeletonJoint.LEFT_SHOULDER, SkeletonJoint.TORSO);
-    drawLine(g2d, skel, SkeletonJoint.RIGHT_SHOULDER, SkeletonJoint.TORSO);
+    //drawLine(g2d, skel, SkeletonJoint.HEAD, SkeletonJoint.NECK);
 
     drawLine(g2d, skel, SkeletonJoint.NECK, SkeletonJoint.LEFT_SHOULDER);
     drawLine(g2d, skel, SkeletonJoint.LEFT_SHOULDER, SkeletonJoint.LEFT_ELBOW);
@@ -294,8 +287,8 @@ public class Skeletons
     drawLine(g2d, skel, SkeletonJoint.RIGHT_SHOULDER, SkeletonJoint.RIGHT_ELBOW);
     drawLine(g2d, skel, SkeletonJoint.RIGHT_ELBOW, SkeletonJoint.RIGHT_HAND);
 
-    drawLine(g2d, skel, SkeletonJoint.LEFT_HIP, SkeletonJoint.TORSO);
-    drawLine(g2d, skel, SkeletonJoint.RIGHT_HIP, SkeletonJoint.TORSO);
+    drawLine(g2d, skel, SkeletonJoint.LEFT_HIP, SkeletonJoint.LEFT_SHOULDER);
+    drawLine(g2d, skel, SkeletonJoint.RIGHT_HIP, SkeletonJoint.RIGHT_SHOULDER);
     drawLine(g2d, skel, SkeletonJoint.LEFT_HIP, SkeletonJoint.RIGHT_HIP);
 
     drawLine(g2d, skel, SkeletonJoint.LEFT_HIP, SkeletonJoint.LEFT_KNEE);
@@ -336,47 +329,40 @@ public class Skeletons
   }  // end of getJointPos()
 
 
+  // WYLIE: copied from SkeletonsGestures.java
+  private float distApart(Point3D p1, Point3D p2) {
+  	// the Euclidian distance between the two points
+    float dist = (float) Math.sqrt( 
+             (p1.getX() - p2.getX())*(p1.getX() - p2.getX()) +
+             (p1.getY() - p2.getY())*(p1.getY() - p2.getY()) +
+             (p1.getZ() - p2.getZ())*(p1.getZ() - p2.getZ()) );
+    return dist;
+  }
 
-
+  // WYLIE: modified to draw oval in place of user's head
   private void drawHead(Graphics2D g2d, 
-                    HashMap<SkeletonJoint, SkeletonJointPosition> skel) 
-  // draw a head image rotated around the z-axis to follow the neck-->head line
-  {
-    if (headImage == null)
-      return;
-
+                    HashMap<SkeletonJoint, SkeletonJointPosition> skel) { 
     Point3D headPt = getJointPos(skel, SkeletonJoint.HEAD);
     Point3D neckPt = getJointPos(skel, SkeletonJoint.NECK);
-    if ((headPt == null) || (neckPt == null))
-      return;  
-    else {
-      int angle = 90 - ((int) Math.round( Math.toDegrees(
-                            Math.atan2(neckPt.getY()-headPt.getY(), 
-                                       headPt.getX()- neckPt.getX()) )));
-      // System.out.println("Head image rotated from vertical by " + angle + " degrees");
-      drawRotatedHead(g2d, headPt, headImage, angle);
-    }
-  }  // end of drawHead()
 
+    if ( headPt == null || neckPt == null)
+      return;
+    
+	float headX = headPt.getX(),
+		  headY = headPt.getY(),
+		  dist = distApart(headPt, neckPt); // used for scaling
+	
+	// calculate rotation angle
+    double angle = Math.PI - Math.atan2(neckPt.getY() - headY,
+                                        headX - neckPt.getX());
+    
+	int height = (int) ( dist * .8 ),
+		width  = (int) dist;
 
-
-  private void drawRotatedHead(Graphics2D g2d, Point3D headPt,
-                                BufferedImage headImage, int angle)
-  {
-    AffineTransform origTF = g2d.getTransform();    // store original orientation
-    AffineTransform newTF = (AffineTransform)(origTF.clone());
-
-    // center of rotation is the head joint
-    newTF.rotate( Math.toRadians(angle), (int)headPt.getX(), (int)headPt.getY());
-    g2d.setTransform(newTF);
-
-    // draw image centered at head joint
-    int x = (int)headPt.getX() - (headImage.getWidth()/2);
-    int y = (int)headPt.getY() - (headImage.getHeight()/2);
-    g2d.drawImage(headImage, x, y, null);
-
-    g2d.setTransform(origTF);    // reset original orientation
-  }  // end of drawRotatedHead()
+    g2d.rotate( angle, headX, headY);
+    g2d.drawOval((int)headX - width/2, (int)headY - height/2, width, height);
+    g2d.rotate( -angle, headX, headY); 
+  }
 
 
 

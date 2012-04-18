@@ -1,3 +1,6 @@
+/** Kinect User Tracking display panel
+ *  modified by Wylie Conlon
+ **/
 
 // TrackerPanel.java
 // Andrew Davison, December 2011, ad@fivedots.psu.ac.th
@@ -9,11 +12,6 @@
    joints move over time.
 
    The skeletons are maintained, updated, and drawn by the Skeletons class.
-
-   ========== Changes (December 2011) ================
-
-   The Skeletons class creates gesture detectors, and keeps them updated.
-   They notify TrackerPanel by having it implement the GesturesWatcher interface. 
 
 */
 
@@ -34,7 +32,7 @@ import java.nio.ShortBuffer;
 
 
 
-public class TrackerPanel extends JPanel implements Runnable, GesturesWatcher
+public class TrackerPanel extends JPanel implements Runnable
 {
   private static final int MAX_DEPTH_SIZE = 10000;  
 
@@ -67,15 +65,19 @@ public class TrackerPanel extends JPanel implements Runnable, GesturesWatcher
          (1, 2, etc.), or 0 to mean it is part of the background
       */
 
-  private Skeletons skels;   // the users' skeletons
+  private Skeletons skels; // the users' skeletons
+
+  private GameRunner game; // WYLIE: gets passed skeleton data, gesture events
 
 
-  public TrackerPanel()
+  public TrackerPanel(GameRunner game)
   {
-    setBackground(Color.WHITE);
+    setBackground(Color.BLACK);
 
     df = new DecimalFormat("0.#");  // 1 dp
     msgFont = new Font("SansSerif", Font.BOLD, 18);
+	
+	this.game = game; // WYLIE
 
     configOpenNI();
 
@@ -118,8 +120,11 @@ public class TrackerPanel extends JPanel implements Runnable, GesturesWatcher
       UserGenerator userGen = UserGenerator.create(context);
       sceneMD = userGen.getUserPixels(0);
          // used to return a map containing user IDs (or 0) at each depth location
+      
+      game.setUserGen(userGen); // WYLIE
 
-      skels = new Skeletons(userGen, depthGen, this);
+      skels = new Skeletons(userGen, depthGen, game); // WYLIE: changed gesture handler
+
 
       context.startGeneratingAll(); 
       System.out.println("Started context generating..."); 
@@ -195,13 +200,9 @@ public class TrackerPanel extends JPanel implements Runnable, GesturesWatcher
       imgbytes[3*pos + 1] = 0;
       imgbytes[3*pos + 2] = 0;
 
-      if (depthVal != 0) {   // there is depth data
+      if (depthVal != 0 && userID != 0) { // there is depth data for a user here
         // convert userID to index into USER_COLORS[]
         int colorIdx = userID % (USER_COLORS.length-1);   // skip last color
-
-        if (userID == 0)    // not a user; actually the background
-          colorIdx = USER_COLORS.length-1;   
-                // use last index: the position of white in USER_COLORS[]
 
         // convert histogram value (0.0-1.0f) to a RGB color
         float histValue = histogram[depthVal];
@@ -261,6 +262,7 @@ public class TrackerPanel extends JPanel implements Runnable, GesturesWatcher
     g2d.setFont(msgFont);    // for user status and stats
     skels.draw(g2d);
     writeStats(g2d);
+    game.update(g2d); // WYLIE: draw game GUI
   } // end of paintComponent()
 
 
@@ -304,20 +306,6 @@ public class TrackerPanel extends JPanel implements Runnable, GesturesWatcher
 	    g2d.drawString("Loading...", 5, panelHeight-10);
   }  // end of writeStats()
 
-
-
-  // ------------GesturesWatcher.pose() -----------------------------
-
-
-  public void pose(int userID, GestureName gest, boolean isActivated)
-  // called by the gesture detectors
-  {
-    if (isActivated) {
-      System.out.println(gest + " " + userID + " on");
-    } else {
-      System.out.println("                        " + gest + " " + userID + " off");
-    }
-  }  // end of pose()
 
 } // end of TrackerPanel class
 

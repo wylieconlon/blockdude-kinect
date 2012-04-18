@@ -312,10 +312,11 @@ public class TrackerPanel extends JPanel implements Runnable, GesturesWatcher
   public void pose(int userID, GestureName gest, boolean isActivated)
   // called by the gesture detectors
   {
-    if (isActivated)
+    if (isActivated) {
       System.out.println(gest + " " + userID + " on");
-    else
+    } else {
       System.out.println("                        " + gest + " " + userID + " off");
+    }
   }  // end of pose()
 
 } // end of TrackerPanel class

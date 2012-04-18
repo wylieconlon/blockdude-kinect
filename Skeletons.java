@@ -457,7 +457,7 @@ public class Skeletons
       System.out.println(args.getPose() + " pose detected for user " + userID);
       try {
         // finished pose detection; switch to skeleton calibration
-        poseDetectionCap.StopPoseDetection(userID);    // big-S ?
+        poseDetectionCap.stopPoseDetection(userID);
         skelCap.requestSkeletonCalibration(userID, true);
       }
       catch (StatusException e)
@@ -499,7 +499,7 @@ public class Skeletons
 			}
         } else {
         	// calibration failed; return to pose detection
-          poseDetectionCap.StartPoseDetection(calibPoseName, userID);    // big-S ?
+          poseDetectionCap.startPoseDetection(calibPoseName, userID);
         }
       }
       catch (StatusException e)

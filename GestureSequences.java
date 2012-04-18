@@ -1,13 +1,12 @@
+/** Complex Gesture Sequences
+ *  modified by Wylie Conlon
+ **/
 
 // GestureSequences.java
 // Andrew Davison, December 2011, ad@fivedots.psu.ac.th
 
 /* GestureSequences stores gesture sequences for each user, and detects 
    more complex gestures by looking for specified sub-sequences.
-
-   At the moment only sequences of right hand gestures are stored here,
-   and the only complex gestures looked for are vertical and horizontal waving.
-
 
    If a complex gesture sub-sequence is found, it is deleted from the user's
    sequence, including any other gestures intersperced between the
@@ -23,39 +22,40 @@ import java.util.*;
 public class GestureSequences
 {
   /* complex gesture sub-sequences that are looked for in the user's 
-     full gesture sequence. Only right hand waving is searched for at the moment.
+     full gesture sequence.
   */
-  private final static GestureName[] HORIZ_WAVE = 
-                            { GestureName.RH_OUT, GestureName.RH_IN, 
-                              GestureName.RH_OUT, GestureName.RH_IN };
-      // a horizontal wave is two out-in moves of the right hand
 
-  private final static GestureName[] VERT_WAVE = 
-                            { GestureName.RH_UP, GestureName.RH_DOWN, 
-                              GestureName.RH_UP, GestureName.RH_DOWN };
-      // a vertical wave is two up-down moves of the right hand
+  // Lifting gestures
+  // WYLIE
 
+  // lifting one hand in front of body
+  private final static GestureName[] RH_LIFT =
+  		{ GestureName.RH_DOWN, GestureName.RH_OUT, GestureName.RH_UP };
+  private final static GestureName[] LH_LIFT =
+  		{ GestureName.LH_DOWN, GestureName.LH_OUT, GestureName.LH_UP };
+
+
+  // arms extending
+  // WYLIE
+  private final static GestureName[] RH_EXTEND = 
+  		{ GestureName.RH_BENT, GestureName.RH_STRAIGHT };
+  private final static GestureName[] LH_EXTEND = 
+  		{ GestureName.LH_BENT, GestureName.LH_STRAIGHT };
 
   private GesturesWatcher watcher;
       // object that is notified of a complex gesture by calling its pose() method
 
   private HashMap<Integer, ArrayList<GestureName>> userGestSeqs;
-                  // gesture sequence for each user
 
-
-  public GestureSequences(GesturesWatcher gw)
-  {
+  public GestureSequences(GesturesWatcher gw) {
     watcher = gw;
     userGestSeqs = new HashMap<Integer, ArrayList<GestureName>>();
-  }  // end of GestureSequences()
+  }
 
-
-
-  public void addUser(int userID)
-  // create a new empty gestures sequence for a user
-  {  userGestSeqs.put(new Integer(userID), new ArrayList<GestureName>());  } 
-
-
+  public void addUser(int userID) {
+  	// create a new empty gestures sequence for a user
+  	userGestSeqs.put(new Integer(userID), new ArrayList<GestureName>());
+  } 
 
   public void removeUser(int userID)
   // remove the gesture sequence for this user
@@ -71,7 +71,7 @@ public class GestureSequences
       System.out.println("No gestures sequence for user " + userID);
     else
       gestsSeq.add(gest);
-  }  // end of addUserGest()
+  }
 
 
 
@@ -82,7 +82,7 @@ public class GestureSequences
     ArrayList<GestureName> gestsSeq = userGestSeqs.get(userID);
     if (gestsSeq != null)
       checkSeq(userID, gestsSeq);
-  }  // end of checkSeqs()
+  }
 
 
 
@@ -91,21 +91,33 @@ public class GestureSequences
      of the user's gesture sequence containing the sub-sequence is deleted.
   */
   {
-    int endPos = findSubSeq(gestsSeq, HORIZ_WAVE);   // look for a horizontal wave
-    if (endPos != -1) {   // found it
-      // printSeq(gestsSeq);
-      watcher.pose(userID, GestureName.HORIZ_WAVE, true);
-      purgeSeq(gestsSeq, endPos);
-      // printSeq(gestsSeq);
-    }
+	// WYLIE
+	
+	// look for one-handed lifts
+	int endPos = findSubSeq(gestsSeq, RH_LIFT);
+  	if (endPos != -1) {
+  		watcher.pose(userID, GestureName.RH_LIFT, true);
+  		purgeSeq(gestsSeq, endPos);
+  	}
+	
+	endPos = findSubSeq(gestsSeq, LH_LIFT);
+  	if (endPos != -1) {
+  		watcher.pose(userID, GestureName.LH_LIFT, true);
+  		purgeSeq(gestsSeq, endPos);
+  	}
 
-    endPos = findSubSeq(gestsSeq, VERT_WAVE);   // look for a vertical wave
-    if (endPos != -1) {  // found it
-      // printSeq(gestsSeq);
-      watcher.pose(userID, GestureName.VERT_WAVE, true);
-      purgeSeq(gestsSeq, endPos);
-      // printSeq(gestsSeq);
-    }
+  	// look for extension gestures
+	endPos = findSubSeq(gestsSeq, RH_EXTEND);
+  	if (endPos != -1) {
+  		watcher.pose(userID, GestureName.RH_EXTEND, true);
+  		purgeSeq(gestsSeq, endPos);
+  	}
+
+  	endPos = findSubSeq(gestsSeq, LH_EXTEND);
+  	if (endPos != -1) {
+  		watcher.pose(userID, GestureName.LH_EXTEND, true);
+  		purgeSeq(gestsSeq, endPos);
+  	}
   }  // end of checkSeq()
 
 

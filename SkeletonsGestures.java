@@ -1,3 +1,6 @@
+/** Skeleton gesture recognition
+ *  modified by Wylie Conlon
+ */
 
 // SkeletonsGestures.java
 // Andrew Davison, December 2011, ad@fivedots.psu.ac.th
@@ -15,12 +18,8 @@
    gestures recognised by the Flexible Action and Articulated Skeleton Toolkit 
    (FAAST) at http://projects.ict.usc.edu/mxr/faast/
 
-
-   Waving gestures are processed by the GestureSequences object which
-   looks for sub-sequences of basic gestures that form "higher-level" gestures
-   (only right hand waving at present).
-   Currently, only the right hand gesture methods send gesture info
-   to the GestureSequences object.
+   Higher-level gestures are processed by the GestureSequences object which
+   looks for sub-sequences of basic gestures that form "higher-level" gestures.
 
    OpenNI SkeletonJoint names:
       HEAD, NECK
@@ -37,13 +36,14 @@ import org.OpenNI.*;
 
 
 enum GestureName {
-   HORIZ_WAVE, VERT_WAVE,                          // waving
-   HANDS_NEAR,                                     // two hands
-   LEAN_LEFT, LEAN_RIGHT, LEAN_FWD, LEAN_BACK,     // leaning
+   RH_LIFT, LH_LIFT,                               // WYLIE
+   LIFT_1, LIFT_2,                                 // WYLIE
+   RH_BENT, LH_BENT,                               // WYLIE
+   RH_STRAIGHT, LH_STRAIGHT,                       // WYLIE
+   RH_EXTEND, LH_EXTEND,                           // WYLIE
    TURN_RIGHT, TURN_LEFT,                          // turning
-   LH_LHIP, RH_RHIP,                               // touching
-   RH_UP, RH_FWD, RH_OUT, RH_IN, RH_DOWN,          // righ hand position
-   LH_UP, LH_FWD, LH_OUT, LH_IN, LH_DOWN           // left hand position
+   RH_UP, RH_FWD, RH_OUT, RH_IN, RH_DOWN,          // right hand position
+   LH_UP, LH_FWD, LH_OUT, LH_IN, LH_DOWN           // left hand position WYLIE
 }
 
 
@@ -67,8 +67,7 @@ public class SkeletonsGestures
 
   private GestureSequences gestSeqs;
             /* stores gesture sequences for each user, and looks for 
-               more complex gestures (actually only right hand 
-               waving at present)  */
+               more complex gestures */
 
   /* skeleton lengths between joint pairs, 
     used when judging the distance between other joints */
@@ -78,27 +77,23 @@ public class SkeletonsGestures
 
 
   // booleans set when gestures are being performed
+  
+  private boolean isRightArmBent = false;
+  private boolean isLeftArmBent = false;  
 
-  private boolean areHandsNear = false;       // two hands
+  private boolean isRightArmStraight = false;
+  private boolean isLeftArmStraight = false;  
+  
+  private boolean isTurnLeft = false;
+  private boolean isTurnRight = false;
 
-  private boolean isLeanLeft = false;         // leaning
-  private boolean isLeanRight = false;
-  private boolean isLeanFwd = false;
-  private boolean isLeanBack = false;
-
-  private boolean isTurnLeft = false;        // turning
-  private boolean isTurnRight = false; 
-
-  private boolean lHandTouchlHip = false;     // touching
-  private boolean rHandTouchrHip = false;
-
-  private boolean isRightHandUp = false;      // right hand
+  private boolean isRightHandUp = false;
   private boolean isRightHandFwd = false;
   private boolean isRightHandOut = false;
   private boolean isRightHandIn = false;
   private boolean isRightHandDown = false;
 
-  private boolean isLeftHandUp = false;       // left hand
+  private boolean isLeftHandUp = false;
   private boolean isLeftHandFwd = false;
   private boolean isLeftHandOut = false;
   private boolean isLeftHandIn = false;
@@ -108,12 +103,11 @@ public class SkeletonsGestures
 
   public SkeletonsGestures(GesturesWatcher aw,
             HashMap<Integer, HashMap<SkeletonJoint, SkeletonJointPosition>> uSkels,
-            GestureSequences gSeqs)
-  {  
+            GestureSequences gSeqs) {
     watcher = aw;
     userSkels = uSkels;
     gestSeqs = gSeqs;
-  }  // end of SkeletonsGestures()
+  }
 
 
 
@@ -132,20 +126,14 @@ public class SkeletonsGestures
          disappear if skeletons were stored using real-world coordinates instead
          of screen-based values. */
 
-    // uncomment the gestures that you want to detect...
+	rightArmBent(userID, skel);
+	leftArmBent(userID, skel);
 
-    // twoHandsNear(userID, skel);
-
-    // leanLeft(userID, skel);
-    // leanRight(userID, skel);
-    // leanFwd(userID, skel); 
-    // leanBack(userID, skel);
-
+	rightArmStraight(userID, skel);
+	leftArmStraight(userID, skel);
+	
     // turnLeft(userID, skel);
     // turnRight(userID, skel);
-
-    // leftHandTouchHip(userID, skel);
-    // rightHandTouchHip(userID, skel);
 
     rightHandUp(userID, skel);
     rightHandFwd(userID, skel);
@@ -159,7 +147,7 @@ public class SkeletonsGestures
     leftHandIn(userID, skel);
     leftHandDown(userID, skel);
 
-  }  // end of checkGests()
+  }
 
 
 
@@ -184,162 +172,138 @@ public class SkeletonsGestures
       lowerArmLength = distApart(handPt, elbowPt);    // hand to elbow length
       // System.out.println("Lower arm length: " + lowerArmLength);
     }
-  }  // end of calcSkelLengths()
+  }
 
 
 
-  private float distApart(Point3D p1, Point3D p2)
-  // the Euclidian distance between the two points
-  {
+  private float distApart(Point3D p1, Point3D p2) {
+  	// the Euclidian distance between the two points
     float dist = (float) Math.sqrt( 
              (p1.getX() - p2.getX())*(p1.getX() - p2.getX()) +
              (p1.getY() - p2.getY())*(p1.getY() - p2.getY()) +
              (p1.getZ() - p2.getZ())*(p1.getZ() - p2.getZ()) );
     return dist;
-  }  // end of distApart()
+  }
 
 
 
-  // -------------------------- two hands ----------------------------------
+  // --------------------- arms bent/straight ----------------------------
+  // WYLIE
 
 
+  // an arm is bent if the hand and shoulder are closer than the forearm length
+  
+  private void rightArmBent(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel) {
+    Point3D rightHandPt     = getJointPos(skel, SkeletonJoint.RIGHT_HAND);
+    Point3D rightShoulderPt = getJointPos(skel, SkeletonJoint.RIGHT_SHOULDER);
 
-  private void twoHandsNear(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
-  // are the user's hand close together on the x-axis?
-  {
-    Point3D leftHandPt = getJointPos(skel, SkeletonJoint.LEFT_HAND);
-    Point3D rightHandPt = getJointPos(skel, SkeletonJoint.RIGHT_HAND);
-    if ((leftHandPt == null) || (rightHandPt == null))
-      return;
+    if( rightHandPt == null || rightShoulderPt == null )
+    	return;
 
-    float xDiff = rightHandPt.getX() - leftHandPt.getX();
-    // System.out.println(xDiff);
-    if (xDiff < neckLength) {    // near
-      if (!areHandsNear) {
-        watcher.pose(userID, GestureName.HANDS_NEAR, true);   // started
-        areHandsNear = true;
+    // lower arm length is precomputed, but may be a default value    
+    if(armLength < lowerArmLength) {
+    	if (!isRightArmBent) {
+    		watcher.pose(userID, GestureName.RH_BENT, true);   // started
+	        gestSeqs.addUserGest(userID, GestureName.RH_BENT);  // add to gesture sequence
+    		isRightArmBent = true;
+    	}
+    } else {
+    	if (isRightArmBent) {
+	        watcher.pose(userID, GestureName.RH_BENT, false);  // stopped
+	        isRightArmBent = false;
+	    }
+	}
+  }
+  
+  private void leftArmBent(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel) {    
+    Point3D leftHandPt     = getJointPos(skel, SkeletonJoint.LEFT_HAND);
+    Point3D leftShoulderPt = getJointPos(skel, SkeletonJoint.LEFT_SHOULDER);
+    
+    if ( leftHandPt == null || leftShoulderPt == null)
+    	return;
+    
+    float dist = distApart(leftHandPt, leftShoulderPt);
+
+    // lower arm length is precomputed, but may be a default value
+    if (dist < lowerArmLength) {
+      if (!isLeftArmBent) {
+        watcher.pose(userID, GestureName.LH_BENT, true);
+		gestSeqs.addUserGest(userID, GestureName.LH_BENT);  // add to gesture sequence
+        isLeftArmBent = true;
+      }
+    } else {
+      if (isLeftArmBent) {
+        watcher.pose(userID, GestureName.LH_BENT, false);
+        isLeftArmBent = false;
       }
     }
-    else {   // not near
-      if (areHandsNear) {
-        watcher.pose(userID, GestureName.HANDS_NEAR, false);  // stopped
-        areHandsNear = false;
+  }
+  
+  
+  // an arm is straight if shoulder, elbow, and hand are approximately horizontal
+  // and also if the distance between hand and shoulder is almost the max
+
+  private void rightArmStraight(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel) {    
+    Point3D rightHandPt     = getJointPos(skel, SkeletonJoint.RIGHT_HAND);
+    Point3D rightElbowPt    = getJointPos(skel, SkeletonJoint.RIGHT_ELBOW);
+    Point3D rightShoulderPt = getJointPos(skel, SkeletonJoint.RIGHT_SHOULDER);
+    
+    if ( rightHandPt == null || rightElbowPt == null || rightShoulderPt == null)
+    	return;
+    
+    float d1 = Math.abs( rightShoulderPt.getY() - rightElbowPt.getY() );
+    float d2 = Math.abs( rightShoulderPt.getY() - rightHandPt.getY() );
+    
+    float dist = distApart(rightHandPt, rightShoulderPt);
+
+    // uses neck length as a reasonably small threshold for horizontal check
+    // use lower arm length as minimum separation threshold
+    if (d1 < neckLength && d2 < neckLength && dist > lowerArmLength) {
+      if (!isRightArmStraight) {
+        watcher.pose(userID, GestureName.RH_STRAIGHT, true);
+		gestSeqs.addUserGest(userID, GestureName.RH_STRAIGHT);  // add to gesture sequence
+        isRightArmStraight = true;
+      }
+    } else {
+      if (isRightArmStraight) {
+        watcher.pose(userID, GestureName.RH_STRAIGHT, false);
+        isRightArmStraight = false;
       }
     }
-  }  // end of twoHandsNear()
+  }
+  
+  private void leftArmStraight(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel) {    
+    Point3D leftHandPt     = getJointPos(skel, SkeletonJoint.LEFT_HAND);
+    Point3D leftElbowPt    = getJointPos(skel, SkeletonJoint.LEFT_ELBOW);
+    Point3D leftShoulderPt = getJointPos(skel, SkeletonJoint.LEFT_SHOULDER);
+    
+    if ( leftHandPt == null || leftElbowPt == null || leftShoulderPt == null)
+    	return;
+    
+    float d1 = Math.abs( leftShoulderPt.getY() - leftElbowPt.getY() );
+    float d2 = Math.abs( leftShoulderPt.getY() - leftHandPt.getY() );
 
+    float dist = distApart(leftHandPt, leftShoulderPt);
 
-
-
-  // -------------------------- leaning ----------------------------------
-
-
-  private void leanLeft(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
-  // is the user's head to the left of his left hip?
-  {
-    Point3D leftHipPt = getJointPos(skel, SkeletonJoint.LEFT_HIP);
-    Point3D headPt = getJointPos(skel, SkeletonJoint.HEAD);
-    if ((leftHipPt == null) || (headPt == null))
-      return;
-
-    if (headPt.getX() <= leftHipPt.getX()) {    // to the left
-      if (!isLeanLeft) {
-        watcher.pose(userID, GestureName.LEAN_LEFT, true);   // started
-        isLeanLeft = true;
+    // uses neck length as a reasonably small threshold for horizontal check
+    // use lower arm length as minimum separation threshold
+    if (d1 < neckLength && d2 < neckLength) {
+      if (!isLeftArmStraight) {
+        watcher.pose(userID, GestureName.LH_STRAIGHT, true);
+		gestSeqs.addUserGest(userID, GestureName.LH_STRAIGHT);  // add to gesture sequence
+        isLeftArmStraight = true;
+      }
+    } else {
+      if (isLeftArmStraight) {
+        watcher.pose(userID, GestureName.LH_STRAIGHT, false);
+        isLeftArmStraight = false;
       }
     }
-    else {   // not to the left
-      if (isLeanLeft) {
-        watcher.pose(userID, GestureName.LEAN_LEFT, false);  // stopped
-        isLeanLeft = false;
-      }
-    }
-  }  // end of leanLeft()
-
-
-
-  private void leanRight(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
-  // is the user's head to the right of his right hip?
-  {
-    Point3D rightHipPt = getJointPos(skel, SkeletonJoint.RIGHT_HIP);
-    Point3D headPt = getJointPos(skel, SkeletonJoint.HEAD);
-    if ((rightHipPt == null) || (headPt == null))
-      return;
-
-    if (rightHipPt.getX() <= headPt.getX()) {    // to the right
-      if (!isLeanRight) {
-        watcher.pose(userID, GestureName.LEAN_RIGHT, true);  // started
-        isLeanRight = true;
-      }
-    }
-    else {   // not to the right
-      if (isLeanRight) {
-        watcher.pose(userID, GestureName.LEAN_RIGHT, false);  // stopped
-        isLeanRight = false;
-      }
-    }
-  }  // end of leanRight()
-
-
-
-
-  private void leanFwd(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
-  // is the user's head forward of his torso?
-  {
-    Point3D torsoPt = getJointPos(skel, SkeletonJoint.TORSO);
-    Point3D headPt = getJointPos(skel, SkeletonJoint.HEAD);
-    if ((torsoPt == null) || (headPt == null))
-      return;
-
-    float zDiff = headPt.getZ() - torsoPt.getZ();
-    //   System.out.println(zDiff);
-
-    if (zDiff < -1*lowerArmLength) {    // head is forward
-      if (!isLeanFwd) {
-        watcher.pose(userID, GestureName.LEAN_FWD, true);  // started
-        isLeanFwd = true;
-      }
-    }
-    else {   // not forward
-      if (isLeanFwd) {
-        watcher.pose(userID, GestureName.LEAN_FWD, false);  // stopped
-        isLeanFwd = false;
-      }
-    }
-  }  // end of leanFwd()
-
-
-
-  private void leanBack(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
-  // is the user's head leaning back relative to his torso?
-  {
-    Point3D torsoPt = getJointPos(skel, SkeletonJoint.TORSO);
-    Point3D headPt = getJointPos(skel, SkeletonJoint.HEAD);
-    if ((torsoPt == null) || (headPt == null))
-      return;
-
-    float zDiff = headPt.getZ() - torsoPt.getZ();
-    //   System.out.println(zDiff);
-
-    if (zDiff > lowerArmLength) {    // head is behind
-      if (!isLeanBack) {
-        watcher.pose(userID, GestureName.LEAN_BACK, true);  // started
-        isLeanBack = true;
-      }
-    }
-    else {   // not behind
-      if (isLeanBack) {
-        watcher.pose(userID, GestureName.LEAN_BACK, false);  // stopped
-        isLeanBack = false;
-      }
-    }
-  }  // end of leanBack()
-
+  }
 
 
 
   // -------------------------- turning ----------------------------------
-
 
   private void turnLeft(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // has the user's right hip turned forward to be in front of his left hip?
@@ -365,8 +329,6 @@ public class SkeletonsGestures
       }
     }
   }  // end of turnLeft()
-
-
 
   private void turnRight(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // has the user's left hip turned forward to be in front of his right hip?
@@ -395,74 +357,11 @@ public class SkeletonsGestures
 
 
 
-  // -------------------------- touching ----------------------------------
-
-
-  private void leftHandTouchHip(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
-  // is the user's left hand touching his left hip?
-  {
-    Point3D leftHandPt = getJointPos(skel, SkeletonJoint.LEFT_HAND);
-    Point3D leftHipPt = getJointPos(skel, SkeletonJoint.LEFT_HIP);
-    if ((leftHandPt == null) || (leftHipPt == null))
-      return;
-
-    float dist = distApart(leftHipPt, leftHandPt);
-    // System.out.println("dist: " + dist);
-
-    if (dist < neckLength) {   // is touching
-      if (!lHandTouchlHip) {
-        watcher.pose(userID, GestureName.LH_LHIP, true);  // started
-        lHandTouchlHip = true;
-      }
-    }
-    else {   // not touching
-      if (lHandTouchlHip) {
-        watcher.pose(userID, GestureName.LH_LHIP, false);  // stopped
-        lHandTouchlHip = false;
-      }
-    }
-  }  // end of leftHandTouchHip()
-
-
-
-
-  private void rightHandTouchHip(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
-  // is the user's right hand touching his right hip?
-  {
-    Point3D rightHandPt = getJointPos(skel, SkeletonJoint.RIGHT_HAND);
-    Point3D rightHipPt = getJointPos(skel, SkeletonJoint.RIGHT_HIP);
-    if ((rightHandPt == null) || (rightHipPt == null))
-      return;
-
-    float dist = distApart(rightHipPt, rightHandPt);
-    // System.out.println("dist: " + dist);
-
-    if (dist < neckLength) {   // is touching
-      if (!rHandTouchrHip) {
-        watcher.pose(userID, GestureName.RH_RHIP, true);  // started
-        rHandTouchrHip = true;
-      }
-    }
-    else {   // not touching
-      if (rHandTouchrHip) {
-        watcher.pose(userID, GestureName.RH_RHIP, false);  // stopped
-        rHandTouchrHip = false;
-      }
-    }
-  }  // end of rightHandTouchHip()
-
-
-
 
   // -------------------------- right hand ----------------------------------
   /* the right hand gesture checking methods notify the GestureSequences 
      object of an gesture start so that it can update the user's gesture sequence.
-
-     All the other gesture checking methods could do this, but I've kept things
-     simple by only considering the right hand.
   */
-
-
 
   private void rightHandUp(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's right hand at head level or above?
@@ -486,9 +385,6 @@ public class SkeletonsGestures
       }
     }
   }  // end of rightHandUp()
-
-
-
 
   private void rightHandFwd(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's right hand forward of his right shoulder?
@@ -517,8 +413,6 @@ public class SkeletonsGestures
     }
   }  // end of rightHandFwd()
 
-
-
   private void rightHandOut(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's right hand out to the right of the his right elbow?
   {
@@ -544,8 +438,6 @@ public class SkeletonsGestures
     }
   }  // end of rightHandOut()
 
-
-
   private void rightHandIn(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's right hand inside (left) of his right elbow?
   {
@@ -570,8 +462,6 @@ public class SkeletonsGestures
       }
     }
   }  // end of rightHandIn()
-
-
 
   private void rightHandDown(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's right hand at hip level or below?
@@ -613,6 +503,7 @@ public class SkeletonsGestures
     if (leftHandPt.getY() <= headPt.getY()) {    // above
       if (!isLeftHandUp) {
         watcher.pose(userID, GestureName.LH_UP, true);  // started
+        gestSeqs.addUserGest(userID, GestureName.LH_UP);  // WYLIE
         isLeftHandUp = true;
       }
     }
@@ -622,11 +513,10 @@ public class SkeletonsGestures
         isLeftHandUp = false;
       }
     }
-  }  // end of leftHandUp()
-  
+  }  // end of leftHandUp()  
 
   // left hand methods below here have been implemented by WYLIE
-  // using same structure as the right hand methods for the same
+  // using same structure as the right hand methods
 
   private void leftHandFwd(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's left hand forward of his left shoulder?
@@ -655,8 +545,6 @@ public class SkeletonsGestures
     }
   }  // end of leftHandFwd()
 
-
-
   private void leftHandOut(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's left hand out to the left of the his left elbow?
   {
@@ -682,8 +570,6 @@ public class SkeletonsGestures
     }
   }  // end of leftHandOut()
 
-
-
   private void leftHandIn(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's left hand inside (left) of his left elbow?
   {
@@ -708,8 +594,6 @@ public class SkeletonsGestures
       }
     }
   }  // end of leftHandIn()
-
-
 
   private void leftHandDown(int userID, HashMap<SkeletonJoint, SkeletonJointPosition> skel)
   // is the user's left hand at hip level or below?

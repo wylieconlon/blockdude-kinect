@@ -8,6 +8,8 @@ import java.io.*;
 import java.awt.*;
 
 public class Level {
+	GameRunner owner;
+
 	int width;
 	int height;
 	
@@ -28,7 +30,9 @@ public class Level {
 	int pHeight = 0;
 	boolean carrying = false;
 
-	public Level(File file, int width, int height) {
+	public Level(File file, int width, int height, GameRunner owner) {
+		this.owner = owner;
+
 		this.width  = width;
 		this.height = height;
 
@@ -178,6 +182,8 @@ public class Level {
 			}
 
 			setScroll(player);
+
+			checkWin();
 		}
 	}
 	public void moveLeft() {
@@ -198,6 +204,8 @@ public class Level {
 			}
 
 			setScroll(player);
+
+			checkWin();
 		}
 	}
 
@@ -260,6 +268,14 @@ public class Level {
 				tiles[ground-1][player-1] = 3;
 				carrying = false;
 			}
+		}
+	}
+
+
+	private void checkWin() {
+		if(tiles[pHeight-1][player] == 1 || tiles[pHeight-2][player] == 1) {
+			// on a door
+			owner.nextLevel();
 		}
 	}
 }

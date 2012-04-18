@@ -19,15 +19,13 @@ public class GameRunner extends JPanel implements GesturesWatcher, ActionListene
 	private int height;
 
 	private Level[] levels;
-
 	private int level = 0;
-	private int score = 0;
 
 	// timer to trigger movement while user is facing one direction
 	boolean movingRight = false;
 	boolean movingLeft = false;
 	private Timer timer;
-	int timerSpeed = 500;
+	int timerSpeed = 600;
 
 
 	public GameRunner() {
@@ -55,18 +53,10 @@ public class GameRunner extends JPanel implements GesturesWatcher, ActionListene
 		levels = new Level[files.length];
 
 		for(int i=0; i<files.length; i++) {
-			levels[i] = new Level(files[i], this.width, this.height);
+			levels[i] = new Level(files[i], this.width, this.height, this);
 		}
 	}
-		
-	public void setUserGen(UserGenerator userGen) {
-		this.userGen = userGen;
-	}
 	
-	public void update(Graphics2D g2d) {
-
-	}
-
 	public void paintComponent(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2d = (Graphics2D) g;
@@ -75,6 +65,15 @@ public class GameRunner extends JPanel implements GesturesWatcher, ActionListene
 	}
 	public Dimension getPreferredSize() {
 		return new Dimension(this.width, this.height);
+	}
+
+
+	public void nextLevel() {
+		if(level < levels.length-1) {
+			level++;
+			timer.stop();
+			repaint();
+		}
 	}
 
 	

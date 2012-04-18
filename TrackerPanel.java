@@ -121,8 +121,6 @@ public class TrackerPanel extends JPanel implements Runnable
       sceneMD = userGen.getUserPixels(0);
          // used to return a map containing user IDs (or 0) at each depth location
       
-      game.setUserGen(userGen); // WYLIE
-
       skels = new Skeletons(userGen, depthGen, game); // WYLIE: changed gesture handler
 
 
@@ -262,7 +260,7 @@ public class TrackerPanel extends JPanel implements Runnable
     g2d.setFont(msgFont);    // for user status and stats
     skels.draw(g2d);
     writeStats(g2d);
-    game.update(g2d); // WYLIE: draw game GUI
+    //game.update(g2d); // WYLIE: draw game GUI
   } // end of paintComponent()
 
 

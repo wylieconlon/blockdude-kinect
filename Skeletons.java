@@ -221,12 +221,13 @@ public class Skeletons
       }
       
       SkeletonJointPosition jPos = null;
-      if (pos.getPosition().getZ() != 0)   // has a depth position
+      if (pos.getPosition().getZ() != 0) { // has a depth position
         jPos = new SkeletonJointPosition( 
                            depthGen.convertRealWorldToProjective(pos.getPosition()),
                                             pos.getConfidence());
-      else  // no info found for that user's joint
+      } else {  // no info found for that user's joint
         jPos = new SkeletonJointPosition(new Point3D(), 0);
+      }
       skel.put(joint, jPos);
     }
     catch (StatusException e) 
@@ -414,8 +415,16 @@ public class Skeletons
     {
       System.out.println("Detected new user " + args.getId());
       try {
-        // try to detect a pose for the new user
-        poseDetectionCap.StartPoseDetection(calibPoseName, args.getId());   // big-S ?
+      		// WYLIE
+      		// 
+      		// try to calibrate the new user automatically, otherwise fall back
+      		// taken from UserTracker.java sample code
+      		
+      		if (skelCap.needPoseForCalibration()) {
+				poseDetectionCap.startPoseDetection(calibPoseName, args.getId());
+			} else {
+				skelCap.requestSkeletonCalibration(args.getId(), true);
+			}
       }
       catch (StatusException e)
       { e.printStackTrace(); }
@@ -477,9 +486,21 @@ public class Skeletons
                      new HashMap<SkeletonJoint, SkeletonJointPosition>());  
               // create new skeleton map for the user
           gestSeqs.addUser(userID);
-        }
-        else    // calibration failed; return to pose detection
+        } else if (args.getStatus() != CalibrationProgressStatus.MANUAL_ABORT) {
+        	// WYLIE
+        	//
+        	// taken from OpenNI 1.5 UserTracker.java sample code
+        	// allows automatic calibration
+
+        	if (skelCap.needPoseForCalibration()) {
+				poseDetectionCap.startPoseDetection(calibPoseName, args.getUser());
+			} else {
+				skelCap.requestSkeletonCalibration(args.getUser(), true);
+			}
+        } else {
+        	// calibration failed; return to pose detection
           poseDetectionCap.StartPoseDetection(calibPoseName, userID);    // big-S ?
+        }
       }
       catch (StatusException e)
       {  e.printStackTrace(); }

@@ -8,8 +8,6 @@ import java.io.*;
 import java.awt.*;
 
 public class Level {
-	GameRunner owner;
-
 	int width;
 	int height;
 	
@@ -30,9 +28,7 @@ public class Level {
 	int pHeight = 0;
 	boolean carrying = false;
 
-	public Level(File file, int width, int height, GameRunner owner) {
-		this.owner = owner;
-
+	public Level(File file, int width, int height) {
 		this.width  = width;
 		this.height = height;
 
@@ -124,9 +120,7 @@ public class Level {
 						
 						break;
 					case 3: // MOVABLE BLOCK
-						g2d.setPaint(Color.GRAY);
-						g2d.fillRect(offsetX, offsetY, tileSize, tileSize);
-						
+						drawBlock(g2d, offsetX, offsetY);						
 						break;
 					case 7: // INITIAL PLAYER
 						break;
@@ -135,6 +129,7 @@ public class Level {
 						g2d.fillRect(offsetX, offsetY, tileSize, tileSize);
 						
 						g2d.setPaint(Color.BLACK);
+						g2d.setStroke(new BasicStroke(2));
 						g2d.drawRect(offsetX, offsetY, tileSize, tileSize);
 
 						break;
@@ -158,9 +153,22 @@ public class Level {
 		g2d.fillRect(offsetX, offsetY, tileSize, tileSize*2);
 
 		if(carrying) {
-			g2d.setPaint(Color.GRAY);
-			g2d.fillRect(offsetX, offsetY - tileSize, tileSize, tileSize);
+			drawBlock(g2d, offsetX, offsetY - tileSize);
 		}
+	}
+
+	// draw movable block
+	private void drawBlock(Graphics2D g2d, int offsetX, int offsetY) {
+		g2d.setPaint(Color.GRAY);
+		g2d.fillRoundRect(offsetX, offsetY, tileSize, tileSize, 20, 20);
+
+		g2d.setPaint(Color.BLACK);
+		
+		g2d.setStroke(new BasicStroke(3));
+		g2d.drawRoundRect(offsetX, offsetY, tileSize, tileSize, 20, 20);
+
+		g2d.setStroke(new BasicStroke(2));
+		g2d.drawRoundRect(offsetX+10, offsetY+10, tileSize-20, tileSize-20, 10, 10);
 	}
 
 	// movement methods called by GameRunner when it gets skeleton position
@@ -182,9 +190,9 @@ public class Level {
 			}
 
 			setScroll(player);
-
-			checkWin();
 		}
+		
+		checkWin();
 	}
 	public void moveLeft() {
 		if(player > 1) {
@@ -204,9 +212,9 @@ public class Level {
 			}
 
 			setScroll(player);
-
-			checkWin();
 		}
+		
+		checkWin();
 	}
 
 	// game actions called by GameRunner when lifting/placing blocks
@@ -272,10 +280,8 @@ public class Level {
 	}
 
 
-	private void checkWin() {
-		if(tiles[pHeight-1][player] == 1 || tiles[pHeight-2][player] == 1) {
-			// on a door
-			owner.nextLevel();
-		}
+	// is the player on a door?
+	public boolean checkWin() {
+		return (tiles[pHeight-1][player] == 1 || tiles[pHeight-2][player] == 1);
 	}
 }

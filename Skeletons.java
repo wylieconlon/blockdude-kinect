@@ -373,7 +373,7 @@ public class Skeletons
                                                 userGen.getUserCoM(userID));
     String label = null;
     if (skelCap.isSkeletonTracking(userID))     // tracking
-      label = new String("Tracking user " + userID);
+      label = ""; // WYLIE: label is ugly
     else if (skelCap.isSkeletonCalibrating(userID))  // calibrating
       label = new String("Calibrating user " + userID);
     else    // pose detection

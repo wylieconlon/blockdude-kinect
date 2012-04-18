@@ -292,16 +292,15 @@ public class TrackerPanel extends JPanel implements Runnable
   /* write statistics in bottom-left corner, or
      "Loading" at start time */
   {
-	  g2d.setColor(Color.BLUE);
+	g2d.setColor(Color.WHITE);
     int panelHeight = getHeight();
     if (imageCount > 0) {
       double avgGrabTime = (double) totalTime / imageCount;
-	    g2d.drawString("Pic " + imageCount + "  " +
-                   df.format(avgGrabTime) + " ms", 
-                   5, panelHeight-10);  // bottom left
+	    g2d.drawString(df.format(avgGrabTime) + " ms", 
+                   10, panelHeight-10);  // bottom left
     }
     else  // no image yet
-	    g2d.drawString("Loading...", 5, panelHeight-10);
+	    g2d.drawString("Loading...", 10, panelHeight-10);
   }  // end of writeStats()
 
 

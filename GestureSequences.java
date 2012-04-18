@@ -30,9 +30,9 @@ public class GestureSequences
 
   // lifting one hand in front of body
   private final static GestureName[] RH_LIFT =
-  		{ GestureName.RH_DOWN, GestureName.RH_OUT, GestureName.RH_UP };
+  		{ GestureName.RH_DOWN, GestureName.RH_STRAIGHT, GestureName.RH_UP };
   private final static GestureName[] LH_LIFT =
-  		{ GestureName.LH_DOWN, GestureName.LH_OUT, GestureName.LH_UP };
+  		{ GestureName.LH_DOWN, GestureName.LH_STRAIGHT, GestureName.LH_UP };
 
 
   // arms extending

@@ -132,19 +132,19 @@ public class SkeletonsGestures
 	rightArmStraight(userID, skel);
 	leftArmStraight(userID, skel);
 	
-    // turnLeft(userID, skel);
-    // turnRight(userID, skel);
+    turnLeft(userID, skel);
+    turnRight(userID, skel);
 
     rightHandUp(userID, skel);
-    rightHandFwd(userID, skel);
+    //rightHandFwd(userID, skel);
     rightHandOut(userID, skel);
-    rightHandIn(userID, skel);
+    //rightHandIn(userID, skel);
     rightHandDown(userID, skel);
 
     leftHandUp(userID, skel);
-    leftHandFwd(userID, skel);
+    //leftHandFwd(userID, skel);
     leftHandOut(userID, skel);
-    leftHandIn(userID, skel);
+    //leftHandIn(userID, skel);
     leftHandDown(userID, skel);
 
   }

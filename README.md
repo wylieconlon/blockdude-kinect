@@ -4,7 +4,7 @@ BlockDude Kinect
 BlockDude is a puzzle game that I used to play on my TI-83 calculator. There is a [playable version](http://azich.org/blockdude/) online by Andrew Zich and Pete Zich. This project recreates the basic mechanics of the game, as well as a couple levels, using the Kinect as a gestural input device. It also allows you to create custom levels with a simple text file.
 
 This screenshot shows the app while the user is performing a "place block" gesture:
-![A screenshot taken while placing a block](screenshot.png)
+![A screenshot taken while placing a block](https://github.com/wylieconlon/blockdude-kinect/raw/master/screenshot.png)
 
 Installation
 ------------
